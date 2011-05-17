@@ -1,0 +1,48 @@
+<%= content_tag(:div, :id=>dom_id(vote), :class=>"dinamic-bl") do %>
+  <div class="act-bl" style="display:none;">
+    <%= link_to image_tag("manage/ico_del.gif", :title=>t('manage.delete')), 
+      manage_ballot_box_vote_path(:id => vote.id, :"#{parent_type}_id" => parent.id), 
+      :method=>:delete, :confirm=>t("manage.confirm_delete"), :class=>"icons" %>
+  </div>
+  
+  <div class="bot-bg">
+    <div class="dinamic-container">
+    	<div class="right-data">	
+        <div class="right-data-cont">
+          <div class="dinamic-inner">
+          	<div class="block">
+              <div class="r-block-cont">
+                <%= content_tag(:span, "#{vote.ip} (#{vote.ip_address})", :class=>"title") %>
+                
+                <table border="0" width="100%" cellspacing="0" cellpadding="0" class="inf">
+                  <tbody>
+                    <tr>
+                      <td class="left">Browser</td>
+                      <td><%= vote.browser_name %> <%= vote.browser_version %> (<%= vote.browser_platform %>)</td>
+                    </tr>
+                    <tr>
+                      <td class="left">Voter:</td>
+                      <td><%= vote.voter_type %>:<%= vote.voter_id %></td>
+                    </tr>
+                    <tr>
+                      <td class="left">User agent:</td>
+                      <td><%= vote.user_agent %></td>
+                    </tr>
+                    <tr>
+                      <td class="left">Refferer:</td>
+                      <td><%= vote.referrer %></td>
+                    </tr>
+                  </tbody>
+                </table>
+                
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="left-data">
+        <span class="data"><%= raw I18n.l(vote.created_at, :format=>"<span>%d/%m</span>%Y") %></span>
+      </div>
+    </div>
+  </div>
+<% end %>

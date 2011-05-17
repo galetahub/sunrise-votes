@@ -1,0 +1,5 @@
+Usage:
+  rails generate sunrise:votes:install
+                 
+Example:
+  rails g sunrise:votes:install

@@ -1,0 +1,29 @@
+<div class="duo-bl">
+  <div class="left-part">
+    <div class="content">
+    	<div class="row-container">
+        <div class="white-row">
+          <div class="r-corn">
+            <%= link_to parent.title, manage_ballot_box_votes_path(:"#{parent_type}_id" => parent.id), :class=>"dark-text" %>
+          </div>
+        </div>
+      </div>
+      <div id="votes" class="stage">
+        <%= render :partial=>"manage/ballot_box/votes/vote", :collection => @votes %>
+        <%= paginate @votes %>
+      </div>
+      
+      <script type='text/javascript'>
+        $(document).ready(function(){
+          Manage.init_collection('votes', 'dinamic-bl');
+        });
+      </script>
+    </div>
+  </div>
+  
+  <div class="right-part">
+    <div class="filter-right">
+      <%= render :partial=>"manage/ballot_box/votes/model_filter" %>
+    </div>
+  </div>
+</div> 

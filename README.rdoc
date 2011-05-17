@@ -1,0 +1,14 @@
+= Sunrise Votes
+
+== Install
+
+Copy javascripts files, need for drow chars via jqPlot. 
+jqPlot is a plotting and charting plugin for the jQuery Javascript framework. 
+jqPlot produces beautiful line, bar and pie charts with many features. 
+http://www.jqplot.com/index.php
+
+  rails generate sunrise:votes:install
+
+== Usage
+
+  <%= link_to 'charts', manage_ballot_box_vote_path(:id => 'charts', :idea_id => idea.id) %>

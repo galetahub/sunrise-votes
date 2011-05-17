@@ -1,0 +1,34 @@
+<div class="bot-bg">
+  <div class="filt-bl">
+    <%= link_to_function t('manage.model_filter.title'), "Manage.toggle_element('block_filter')", :class=>"dark-arr" %>
+    
+    <%= cookie_content_tag(:div, :id=>"block_filter", :class=>"filt") do %>
+      <%= form_for @search, :as => :search, :url => manage_ballot_box_votes_path, :html=>{:method=>:get, :id=>"form_filter"} do |f| %>
+        <%= hidden_field_tag "#{parent_type}_id", parent.id %>
+        
+        <%= f.label :ip_address, t('activerecord.attributes.vote.ip_address') %>
+        <%= f.text_field :ip_address, :class=>"text" %>
+        
+        <%= f.label :browser_name, t('activerecord.attributes.vote.browser_name') %>
+        <%= f.text_field :browser_name, :class=>"text" %>
+        
+        <%= f.label :browser_platform, t('activerecord.attributes.vote.browser_platform') %>
+        <%= f.text_field :browser_platform, :class=>"text" %>
+                
+        <div class="buts">
+          <%= f.submit t('manage.model_filter.search'), :style=>"display:none;" %>
+          <%= link_to_function content_tag(:span, t('manage.model_filter.search')), "$('#form_filter').submit()", :class=>"gr" %>                
+          <%= link_to t('manage.model_filter.clear'), manage_ballot_box_votes_path(:"#{parent_type}_id" => parent.id), :class=>"erase" %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+  <div class="sort">
+  	<label><%= t('manage.sort') %></label>
+    <div class="select-input"><%= link_to_function t("votes.#{@search.order_column}_#{@search.order_type}", :scope => [:manage, :sort_columns], :default => :"#{@search.order_column}_#{@search.order_type}"), "SelectList.toggle(event)", :class=>"corn", :id=>'sort_select' %></div>
+    <div id='sort_select_list' class="select-list" style='display:none;'>
+      <%= link_to_sort(t('votes.created_at_desc', :scope => [:manage, :sort_columns], :default => :created_at_desc), :name => "created_at", :order_type => 'desc') %>
+      <%= link_to_sort(t('votes.created_at_asc', :scope => [:manage, :sort_columns], :default => :created_at_asc), :name => "created_at", :order_type => 'asc') %>
+    </div>
+  </div>
+</div>
