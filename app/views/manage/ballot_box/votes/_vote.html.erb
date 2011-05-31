@@ -1,7 +1,7 @@
 <%= content_tag(:div, :id=>dom_id(vote), :class=>"dinamic-bl") do %>
   <div class="act-bl" style="display:none;">
     <%= link_to image_tag("manage/ico_del.gif", :title=>t('manage.delete')), 
-      manage_ballot_box_vote_path(:id => vote.id, :"#{parent_type}_id" => parent.id), 
+      manage_ballot_box_vote_path( voteable_scope(@voteable).merge(:id => vote.id) ), 
       :method=>:delete, :confirm=>t("manage.confirm_delete"), :class=>"icons" %>
   </div>
   

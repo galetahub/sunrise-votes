@@ -11,4 +11,4 @@ http://www.jqplot.com/index.php
 
 == Usage
 
-  <%= link_to 'charts', manage_ballot_box_vote_path(:id => 'charts', :idea_id => idea.id) %>
+  <%= link_to 'charts', manage_ballot_box_vote_path(:id => 'charts', :voteable_id => work.id, :voteable_type => work.class.name) %>

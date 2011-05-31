@@ -8,10 +8,10 @@
 
 <div class="edit-bl">
   <div class="bot-bg">
-    <div id="voteable_title" class="block-title"><%= parent.title %></div>
+    <div id="voteable_title" class="block-title"><%= @voteable.title %></div>
     
     <div class="edit-cont">
-      <%= link_to t('manage.sunrise.votes.view'), manage_ballot_box_votes_path(:"#{parent_type}_id" => parent.id) %>
+      <%= link_to t('manage.sunrise.votes.view'), manage_ballot_box_votes_path( voteable_scope(@voteable) ) %>
       
       <div id="chart_dates" style="height:400px;width:800px;"></div>
     </div>
