@@ -1,18 +1,23 @@
 <%= content_for(:head) do %>
-  <!--[if lt IE 9]><%= javascript_include_tag "ballot_box/excanvas.min" %><![endif]-->
-  <%= javascript_include_tag "ballot_box/jquery.jqplot.min", "ballot_box/plugins/jqplot.json2.min" %>
-  <%= javascript_include_tag "ballot_box/plugins/jqplot.cursor.min", "ballot_box/plugins/jqplot.pieRenderer.min" %>
-  <%= javascript_include_tag "ballot_box/plugins/jqplot.highlighter.min", "ballot_box/plugins/jqplot.dateAxisRenderer.min" %>
-  <%= stylesheet_link_tag "/javascripts/ballot_box/jquery.jqplot.css" %>  
+  <%= javascript_include_tag "highcharts/highcharts", "highcharts/themes/gray", "highcharts/modules/exporting" %>
 <% end %>
 
 <div class="edit-bl">
   <div class="bot-bg">
     <div id="voteable_title" class="block-title"><%= @voteable.title %></div>
-    
+
     <div class="edit-cont">
       <%= link_to t('manage.sunrise.votes.view'), manage_ballot_box_votes_path( voteable_scope(@voteable) ) %>
       
+      <% if @min_created_at %>
+        <div style="padding-top:15px;">
+          <div>MIN: <%= @min_created_at.strftime('%d.%m.%Y %H:%M') %></div>
+          <div>MAX: <%= @max_created_at.strftime('%d.%m.%Y %H:%M') %></div>
+        </div>
+      <% end %>
+    </div>
+    
+    <div class="edit-cont">      
       <div id="chart_dates" style="height:400px;width:800px;"></div>
     </div>
       
@@ -28,85 +33,210 @@
 
 <script type="text/javascript">
   $(document).ready(function(){
-    var ajaxDataRenderer = function(url, plot, options) {
-      var ret = null;
-      $.ajax({
-        // have to use synchronous here, else the function
-        // will return before the data is fetched
-        async: false,
-        url: url,
-        dataType:"json",
-        success: function(data) {
-          ret = data;
-        }
-      });
-      return ret;
-    };
-    
-    // The url for our json data
-    var dates_url = window.location.href.replace('/charts', '/dates');
-    
-    var dates_plot = $.jqplot('chart_dates', dates_url, {
-      title: $('#voteable_title').text() + " dates",
-      dataRenderer: ajaxDataRenderer,
-      dataRendererOptions: {
-        unusedOptionalUrl: dates_url
-      },
-      
-      axes:{
-        xaxis:{
-          renderer:$.jqplot.DateAxisRenderer,
-          tickOptions:{
-            formatString:'%b&nbsp;%#d'
+    /*  DATES */
+    var dates_url = window.location.href.replace('/charts', '/dates_browsers');
+    var dates_chart = null;
+		var dates_options = {
+			chart: { renderTo: 'chart_dates' },
+			title: { text: $('#voteable_title').text() + " dates" },
+			subtitle: { text: 'Source: BallotBox' },
+			
+			xAxis: {
+				type: 'datetime',
+				tickInterval: 7 * 24 * 3600 * 1000, // one week
+				tickWidth: 0,
+				gridLineWidth: 1,
+				labels: {
+					align: 'left',
+					x: 3,
+					y: -3 
+				}
+			},
+			
+			yAxis: [{ // left y axis
+				title: { text: null },
+				labels: {
+					align: 'left',
+					x: 3,
+					y: 16,
+					formatter: function() {
+						return Highcharts.numberFormat(this.value, 0);
+					}
+				},
+				showFirstLabel: false
+			}, { // right y axis
+				linkedTo: 0,
+				gridLineWidth: 0,
+				opposite: true,
+				title: {
+					text: null
+				},
+				labels: {
+					align: 'right',
+					x: -3,
+					y: 16,
+					formatter: function() {
+						return Highcharts.numberFormat(this.value, 0);
+					}
+				},
+				showFirstLabel: false
+			}],
+			
+			legend: {
+				align: 'left',
+				verticalAlign: 'top',
+				y: 20,
+				floating: true,
+				borderWidth: 0
+			},
+			
+			tooltip: {
+				shared: true,
+				crosshairs: true
+			},
+			
+			plotOptions: {
+				series: {
+					cursor: 'pointer',
+					point: {
+						events: {
+							click: function() {
+								hs.htmlExpand(null, {
+									pageOrigin: {
+										x: this.pageX, 
+										y: this.pageY
+									},
+									headingText: this.series.name,
+									maincontentText: Highcharts.dateFormat('%A, %b %e, %Y', this.x) +':<br/' + '>'+ 
+										this.y +' votes',
+									width: 200
+								});
+							}
+						}
+					},
+					marker: {
+						lineWidth: 1
+					}
+				}
+			},
+			
+			series: []
+		};
+		
+		$.ajax({
+      url: dates_url, dataType: "json",
+      success: function(data) {
+        $.each(data, function(index, value) { 
+          if (index == 0) {
+            value["lineWidth"] = 4;
+            value["marker"] = { radius: 4 };
           }
-        }
-      },
-      highlighter: {
-        show: true,
-        sizeAdjust: 7.5
-      },
-      cursor: {
-        show: false
+          
+          $.each(value.data, function(position, item){
+            item[0] = Date.parse(item[0]);
+          });
+          
+          dates_options.series.push( value );
+        });
+		
+        dates_chart = new Highcharts.Chart(dates_options);
       }
     });
-    
-    var browsers_url = window.location.href.replace('/charts', '/browsers');
-    var browsers_plot = $.jqplot('chart_browsers', browsers_url, {
-      title: $('#voteable_title').text() + " browsers",
-      dataRenderer: ajaxDataRenderer,
-      dataRendererOptions: {
-        unusedOptionalUrl: browsers_url
-      },
-      
-      seriesDefaults: {
-        // Make this a pie chart.
-        renderer: $.jqplot.PieRenderer,
-        rendererOptions: {
-          // Put data labels on the pie slices.
-          // By default, labels show the percentage of the slice.
-          showDataLabels: true
-        }
-      },
-      
-      legend: { show:true, location: 'e' }
+		
+		/*  BROWSERS */
+		var browsers_chart = null;
+		var browsers_url = window.location.href.replace('/charts', '/browsers');
+		var browsers_options = {
+		  chart: {
+			  renderTo: 'chart_browsers',
+			  plotBackgroundColor: null,
+			  plotBorderWidth: null,
+			  plotShadow: false
+		  },
+		  title: { text: $('#voteable_title').text() + " browsers" },
+		  tooltip: {
+			  formatter: function() {
+				  return '<b>'+ this.point.name +'</b>: '+ this.point.y;
+			  }
+		  },
+		  plotOptions: {
+			  pie: {
+				  allowPointSelect: true,
+				  cursor: 'pointer',
+				  dataLabels: {
+					  enabled: true,
+					  color: '#000000',
+					  connectorColor: '#000000',
+					  formatter: function() {
+						  return '<b>'+ this.point.name +'</b>: '+ this.percentage +' %';
+					  }
+				  }
+			  }
+		  },
+	    series: [{
+			  type: 'pie',
+			  name: 'Browsers',
+			  data: []
+		  }]
+		};
+		
+		$.ajax({
+      url: browsers_url, dataType: "json",
+      success: function(data) {
+        $.each(data, function(index, value) { 
+          browsers_options.series[0].data = value;
+        });
+		
+        browsers_chart = new Highcharts.Chart(browsers_options);
+      }
     });
-    
-    var platforms_url = window.location.href.replace('/charts', '/platforms');
-    var platforms_plot = $.jqplot('chart_platforms', platforms_url, {
-      title: $('#voteable_title').text() + " platforms",
-      dataRenderer: ajaxDataRenderer,
-      dataRendererOptions: {
-        unusedOptionalUrl: platforms_url
-      },
-      
-      seriesDefaults: {
-        renderer: $.jqplot.PieRenderer,
-        rendererOptions: {
-          showDataLabels: true
-        }
-      },
-      
-      legend: { show:true, location: 'e' }
+		
+		/*  PLATFORMS */
+		var platforms_chart = null;
+		var platforms_url = window.location.href.replace('/charts', '/platforms');
+		var platforms_options = {
+		  chart: {
+			  renderTo: 'chart_platforms',
+			  plotBackgroundColor: null,
+			  plotBorderWidth: null,
+			  plotShadow: false
+		  },
+		  title: { text: $('#voteable_title').text() + " platforms" },
+		  tooltip: {
+			  formatter: function() {
+				  return '<b>'+ this.point.name +'</b>: '+ this.point.y;
+			  }
+		  },
+		  plotOptions: {
+			  pie: {
+				  allowPointSelect: true,
+				  cursor: 'pointer',
+				  dataLabels: {
+					  enabled: true,
+					  color: '#000000',
+					  connectorColor: '#000000',
+					  formatter: function() {
+						  return '<b>'+ this.point.name +'</b>: '+ this.percentage +' %';
+					  }
+				  }
+			  }
+		  },
+	    series: [{
+			  type: 'pie',
+			  name: 'Platforms',
+			  data: []
+		  }]
+		};
+		
+		$.ajax({
+      url: platforms_url, dataType: "json",
+      success: function(data) {
+        $.each(data, function(index, value) { 
+          platforms_options.series[0].data = value;
+        });
+		
+        platforms_chart = new Highcharts.Chart(platforms_options);
+      }
     });
   });
 </script>

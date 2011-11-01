@@ -9,7 +9,7 @@ module Sunrise
       desc "Copy javascript chart files"
       
       def copy_javascripts
-        directory "javascripts/ballot_box", "public/javascripts/ballot_box"
+        directory "javascripts/highcharts", "public/javascripts/highcharts"
       end
     end
   end

@@ -20,6 +20,10 @@ class Manage::BallotBox::VotesController < Manage::BaseController
   
   def show
     respond_with(@voteable) do |format|
+      format.html do
+        @max_created_at = @voteable.votes.maximum(:created_at)
+        @min_created_at = @voteable.votes.minimum(:created_at)
+      end
       format.json { render :json => @voteable.votes.chart(params[:id]) }
     end
   end
